@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"github.com/antchfx/antch"
 	"github.com/antchfx/htmlquery"
+	"fmt"
 )
 
 type BmListFinishPipeline struct{
@@ -43,22 +44,22 @@ func (h *BmListPageHandler) StartCrawlerList(url string) {
 	}
 
 	// TODO: 等全部测试好了之后在用50个chan buffer，如果被封了在想办法
-	//pool := make(chan []string, 50)
-	pool := make(chan []string, 1)
-	defer close(pool)
-	content := details[0]
-	//for _, content := range details {
-		go h.CrawlerListContent(pool, content)
+	pool := make(chan []string, 50)
+	//pool := make(chan []string, 1)
+	//defer close(pool)
+	//content := details[0]
+	for _, content := range details {
+		 h.CrawlerListContent(pool, content)
 	//go h.CrawlerListContent(pool, content)
-	//}
+	}
 
 	var result []string
 	// TODO: 等全部测试好了之后在用50个chan buffer，如果被封了在想办法
-	//for page := plb; page <= pub; page++ {
-	for page := plb; page <= 1; page++ {
+	for page := plb; page <= pub; page++ {
+	//for page := plb; page <= 1; page++ {
 		result = append(result, <-pool...)
 	}
-
+	fmt.Println(len(result))
 	// TODO: 将result全部弄出来，一次十条一次利用chan一次性处理
 	h.DetailHandler.StartCrawlerWithDetail(result)
 }
@@ -94,7 +95,8 @@ func (h *BmListPageHandler) ServeSpider(c chan<- antch.Item, res *http.Response)
 	var ret []string
 	for _, node := range htmlquery.Find(doc, h.Args["linkqueryparam"]) {
 		link := htmlquery.SelectAttr(node, "href")
-		ret = append(ret, link[2:])
+		link="http:"+link
+		ret = append(ret, link)
 	}
 	c <- ret
 }

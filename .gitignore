@@ -19,3 +19,5 @@ vendor
 
 # iml files
 *.iml
+
+*.csv
